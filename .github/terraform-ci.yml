@@ -1,0 +1,42 @@
+name: Terraform CI Checks
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: '1.4.0'
+
+    - name: Install Checkov
+      run: |
+        pip install checkov
+
+    - name: Install tflint
+      run: |
+        curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+
+    - name: Terraform Validate
+      run: terraform validate
+
+    - name: Checkov: Static Code Analysis
+      run: checkov -d .
+
+    - name: TFLint: Terraform Linter
+      run: tflint
+
+    - name: Terraform Plan
+      run: terraform plan -out=tfplan
+
+    - name: Terraform Plan Check
+      run: terraform show -no-color tfplan
